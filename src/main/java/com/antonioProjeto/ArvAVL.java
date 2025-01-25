@@ -162,6 +162,16 @@ public class ArvAVL {
         return atual;
     }
 
+    private Node valorMaximo(Node no) {
+        Node atual = no;
+
+        while (atual.direita != null) {
+            atual = atual.direita;
+        }
+
+        return atual;
+    }
+
     public void delete(int chave) {
         raiz = delete(raiz, chave);
     }
@@ -187,8 +197,62 @@ public class ArvAVL {
             }
 
             Node sucessor = valorMinimo(no.direita);
-            no.chave = sucessor.chave; // Substitui a chave do nó atual pelo sucessor
-            no.direita = delete(no.direita, sucessor.chave); // Remove o sucessor
+            no.chave = sucessor.chave;
+            no.direita = delete(no.direita, sucessor.chave);
+        }
+
+        no.altura = Math.max(altura(no.esquerda), altura(no.direita)) + 1;
+
+        int balanceamento = obterBalanceamento(no);
+
+        if (balanceamento > 1 && obterBalanceamento(no.esquerda) >= 0) {
+            return rotacaoDireita(no);
+        }
+
+        if (balanceamento > 1 && obterBalanceamento(no.esquerda) < 0) {
+            no.esquerda = rotacaoEsquerda(no.esquerda);
+            return rotacaoDireita(no);
+        }
+
+        if (balanceamento < -1 && obterBalanceamento(no.direita) <= 0) {
+            return rotacaoEsquerda(no);
+        }
+
+        if (balanceamento < -1 && obterBalanceamento(no.direita) > 0) {
+            no.direita = rotacaoDireita(no.direita);
+            return rotacaoEsquerda(no);
+        }
+
+        return no;
+    }
+
+    public void deleteAntecessor(int chave) {
+        raiz = deleteAntecessor(raiz, chave);
+    }
+
+    private Node deleteAntecessor(Node no, int chave) {
+        if (no == null) {
+            return null;
+        }
+
+        if (chave < no.chave) {
+            no.esquerda = deleteAntecessor(no.esquerda, chave);
+        } else if (chave > no.chave) {
+            no.direita = deleteAntecessor(no.direita, chave);
+        } else {
+            if (no.esquerda == null && no.direita == null) {
+                return null;
+            }
+
+            if (no.esquerda == null) {
+                return no.direita;
+            } else if (no.direita == null) {
+                return no.esquerda;
+            }
+
+            Node antecessor = valorMaximo(no.esquerda);
+            no.chave = antecessor.chave;
+            no.esquerda = delete(no.esquerda, antecessor.chave);
         }
 
         no.altura = Math.max(altura(no.esquerda), altura(no.direita)) + 1;
@@ -223,7 +287,11 @@ public class ArvAVL {
             do{
                 antigoNo = gerador.nextInt(1,10000);
             }while(!this.contem(antigoNo));
-            this.delete(antigoNo);
+            int eAntSuc = gerador.nextInt(0,1);
+            if(eAntSuc == 0)
+                this.delete(antigoNo);
+            else
+                this.deleteAntecessor(antigoNo);
             int novoNo;
             do{
                 novoNo = gerador.nextInt(1,10000);
